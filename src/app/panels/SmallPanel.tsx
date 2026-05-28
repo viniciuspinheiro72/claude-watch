@@ -2,7 +2,7 @@ import { Box, Text, useInput, useApp } from 'ink'
 import { useState, useEffect } from 'react'
 import type { SessionMetrics } from '../../domain/SessionMetrics.js'
 import type { DayMetrics } from '../../domain/DayMetrics.js'
-import { formatTokens, formatCost } from '../../utils/format.js'
+import { formatTokens } from '../../utils/format.js'
 
 interface Props {
   currentSession: SessionMetrics | null
@@ -49,13 +49,17 @@ export function SmallPanel({ currentSession, todayMetrics, recentDays }: Props) 
 
   void tick
 
-  const maxDayCost = Math.max(...recentDays.map((d) => d.costUSD), 0.0001)
   const todayCost = todayMetrics?.costUSD ?? 0
   const sessionCost = currentSession?.costUSD ?? 0
   const sessionTokens = (currentSession?.inputTokens ?? 0) + (currentSession?.outputTokens ?? 0)
+  const weekCost = recentDays.reduce((sum, d) => sum + d.costUSD, 0)
 
-  const todayRatio = todayCost / maxDayCost
   const sessionRatio = todayCost > 0 ? sessionCost / todayCost : 0
+  const weekRatio = weekCost > 0 ? todayCost / weekCost : 0
+
+  function pct(ratio: number): string {
+    return `${Math.round(ratio * 100)}%`
+  }
 
   const hasData = currentSession !== null || todayMetrics !== null
 
@@ -75,15 +79,15 @@ export function SmallPanel({ currentSession, todayMetrics, recentDays }: Props) 
           <Box>
             <Box width={10}><Text dimColor>session </Text></Box>
             <Text color={barColor(sessionRatio)}>{bar(sessionRatio)} </Text>
-            <Text color="white">{formatCost(sessionCost)} </Text>
+            <Box width={5}><Text color="white">{pct(sessionRatio)} </Text></Box>
             <Text dimColor>{formatTokens(sessionTokens)}</Text>
           </Box>
 
           <Box>
-            <Box width={10}><Text dimColor>today   </Text></Box>
-            <Text color={barColor(todayRatio)}>{bar(todayRatio)} </Text>
-            <Text color="magenta">{formatCost(todayCost)} </Text>
-            <Text dimColor>{todayMetrics?.sessionCount ?? 0}s</Text>
+            <Box width={10}><Text dimColor>week    </Text></Box>
+            <Text color={barColor(weekRatio)}>{bar(weekRatio)} </Text>
+            <Box width={5}><Text color="magenta">{pct(weekRatio)} </Text></Box>
+            <Text dimColor>{todayMetrics?.sessionCount ?? 0}s today</Text>
           </Box>
 
           <Box marginTop={1}>

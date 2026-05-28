@@ -1,11 +1,14 @@
-import { Box, Text } from 'ink'
+import { Box, Text, useStdout } from 'ink'
 import { useUsage } from '../hooks/useUsage.js'
 
-const BAR_WIDTH = 16
+const MIN_BAR = 8
+const MAX_BAR = 24
+// label(10) + bar + space(1) + pct(5) + reset(~14) + border+padding(4)
+const FIXED_COLS = 34
 
-function bar(pct: number): string {
-  const filled = Math.min(BAR_WIDTH, Math.round((pct / 100) * BAR_WIDTH))
-  return '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled)
+function bar(pct: number, width: number): string {
+  const filled = Math.min(width, Math.round((pct / 100) * width))
+  return '█'.repeat(filled) + '░'.repeat(width - filled)
 }
 
 function barColor(pct: number): string {
@@ -31,6 +34,9 @@ function shortDate(date: Date): string {
 
 export function SmallPanel() {
   const usage = useUsage()
+  const { stdout } = useStdout()
+  const cols = stdout.columns ?? 80
+  const barWidth = Math.max(MIN_BAR, Math.min(MAX_BAR, cols - FIXED_COLS))
 
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="gray" paddingX={1}>
@@ -50,14 +56,14 @@ export function SmallPanel() {
         <>
           <Box>
             <Box width={10}><Text dimColor>session </Text></Box>
-            <Text color={barColor(usage.session.utilization)}>{bar(usage.session.utilization)} </Text>
+            <Text color={barColor(usage.session.utilization)}>{bar(usage.session.utilization, barWidth)} </Text>
             <Box width={5}><Text color="white">{Math.round(usage.session.utilization)}% </Text></Box>
             <Text dimColor>↻ {timeUntil(usage.session.resetsAt)}</Text>
           </Box>
 
           <Box>
             <Box width={10}><Text dimColor>week    </Text></Box>
-            <Text color={barColor(usage.week.utilization)}>{bar(usage.week.utilization)} </Text>
+            <Text color={barColor(usage.week.utilization)}>{bar(usage.week.utilization, barWidth)} </Text>
             <Box width={5}><Text color="magenta">{Math.round(usage.week.utilization)}% </Text></Box>
             <Text dimColor>↻ {shortDate(usage.week.resetsAt)}</Text>
           </Box>

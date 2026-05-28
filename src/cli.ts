@@ -21,6 +21,7 @@ program
       console.error('claude-watch requires a TTY terminal')
       process.exit(1)
     }
+    if (opts.small) process.stdout.write('\x1B[2J\x1B[H')
     render(createElement(App, { projectFilter: opts.project, small: opts.small }))
   })
 

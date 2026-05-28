@@ -15,12 +15,13 @@ program
   .command('watch', { isDefault: true })
   .description('Watch Claude Code usage in real time (default command)')
   .option('-P, --project <path>', 'Filter to a specific project directory')
-  .action((opts: { project?: string }) => {
+  .option('-s, --small', 'Compact widget mode')
+  .action((opts: { project?: string; small?: boolean }) => {
     if (!process.stdout.isTTY) {
       console.error('claude-watch requires a TTY terminal')
       process.exit(1)
     }
-    render(createElement(App, { projectFilter: opts.project }))
+    render(createElement(App, { projectFilter: opts.project, small: opts.small }))
   })
 
 program.parse()

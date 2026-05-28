@@ -4,12 +4,14 @@ import { useAggregator } from './hooks/useAggregator.js'
 import { SessionPanel } from './panels/SessionPanel.js'
 import { TodayPanel } from './panels/TodayPanel.js'
 import { HistoryPanel } from './panels/HistoryPanel.js'
+import { SmallPanel } from './panels/SmallPanel.js'
 
 interface Props {
   projectFilter?: string
+  small?: boolean
 }
 
-export function App({ projectFilter }: Props) {
+export function App({ projectFilter, small = false }: Props) {
   const { exit } = useApp()
   const entries = useLogWatcher({ projectFilter })
   const { currentSession, todayMetrics, recentDays } = useAggregator(entries)
@@ -21,6 +23,16 @@ export function App({ projectFilter }: Props) {
   })
 
   const hasData = currentSession !== null || todayMetrics !== null
+
+  if (small) {
+    return (
+      <SmallPanel
+        currentSession={currentSession}
+        todayMetrics={todayMetrics}
+        recentDays={recentDays}
+      />
+    )
+  }
 
   return (
     <Box flexDirection="column" padding={1}>

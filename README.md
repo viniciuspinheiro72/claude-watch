@@ -52,9 +52,29 @@ claude-watch
 # Filter to a specific project
 claude-watch --project ~/projects/my-app
 claude-watch -P ~/projects/my-app
+
+# Compact widget mode (fits in a tmux pane or terminal corner)
+claude-watch --small
+claude-watch -s
 ```
 
 Press `q` to quit.
+
+### Widget mode
+
+`--small` renders a minimal 6-line panel designed to sit in a tmux pane or a narrow terminal alongside your work:
+
+```
+╭─ claude-watch ──────────────────────────────╮
+│ claude-watch widget                          │
+│ session  ██████████░░░░░░  $0.18  26k       │
+│ today    ████░░░░░░░░░░░░  $2.31   3s       │
+│                                              │
+│ ↻ resets in 9h 42m  [q] quit               │
+╰──────────────────────────────────────────────╯
+```
+
+The progress bars are color-coded green → yellow → red as spend increases. The session bar shows this session's share of today's total; the today bar shows today's cost relative to your 7-day peak. The reset countdown ticks to midnight local time.
 
 ## How it works
 
@@ -69,6 +89,7 @@ Claude Code writes a JSONL file per session under `~/.claude/projects/`. Each as
 | **Current Session** | Every response | Tokens, cost, model, duration, message count |
 | **Today** | Every response | Daily aggregate across all sessions |
 | **Last 7 Days** | On start + new sessions | Cost bar chart, token totals, session count |
+| **Widget** (`--small`) | Every response | Compact bars, session + daily cost, reset countdown |
 
 ## Environment variables
 

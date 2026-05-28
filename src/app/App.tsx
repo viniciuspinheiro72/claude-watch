@@ -9,19 +9,20 @@ import { SmallPanel } from './panels/SmallPanel.js'
 interface Props {
   projectFilter?: string
   small?: boolean
+  border?: boolean
 }
 
-export function App({ projectFilter, small = false }: Props) {
-  if (small) return <WidgetApp />
+export function App({ projectFilter, small = false, border = true }: Props) {
+  if (small) return <WidgetApp border={border} />
   return <FullApp projectFilter={projectFilter} />
 }
 
-function WidgetApp() {
+function WidgetApp({ border }: { border: boolean }) {
   const { exit } = useApp()
   useInput((input, key) => {
     if (input === 'q' || (key.ctrl && input === 'c')) exit()
   })
-  return <SmallPanel />
+  return <SmallPanel border={border} />
 }
 
 function FullApp({ projectFilter }: { projectFilter?: string }) {

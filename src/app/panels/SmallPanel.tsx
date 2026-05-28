@@ -32,14 +32,23 @@ function shortDate(date: Date): string {
   return date.toLocaleDateString('en', { month: 'short', day: 'numeric' })
 }
 
-export function SmallPanel() {
+interface Props {
+  border?: boolean
+}
+
+export function SmallPanel({ border = true }: Props) {
   const usage = useUsage()
   const { stdout } = useStdout()
   const cols = stdout.columns ?? 80
   const barWidth = Math.max(MIN_BAR, Math.min(MAX_BAR, cols - FIXED_COLS))
 
   return (
-    <Box flexDirection="column" borderStyle="round" borderColor="gray" paddingX={1}>
+    <Box
+      flexDirection="column"
+      borderStyle={border ? 'round' : undefined}
+      borderColor="gray"
+      paddingX={1}
+    >
       <Box marginBottom={1}>
         <Text bold color="white">claude-watch </Text>
         <Text dimColor>widget</Text>

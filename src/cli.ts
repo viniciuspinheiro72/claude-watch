@@ -16,13 +16,14 @@ program
   .description('Watch Claude Code usage in real time (default command)')
   .option('-P, --project <path>', 'Filter to a specific project directory')
   .option('-s, --small', 'Compact widget mode')
-  .action((opts: { project?: string; small?: boolean }) => {
+  .option('--no-border', 'Remove border in widget mode')
+  .action((opts: { project?: string; small?: boolean; border?: boolean }) => {
     if (!process.stdout.isTTY) {
       console.error('claude-watch requires a TTY terminal')
       process.exit(1)
     }
     if (opts.small) process.stdout.write('\x1B[2J\x1B[H')
-    render(createElement(App, { projectFilter: opts.project, small: opts.small }))
+    render(createElement(App, { projectFilter: opts.project, small: opts.small, border: opts.border ?? true }))
   })
 
 program.parse()

@@ -1,62 +1,36 @@
 import { Box, Text } from 'ink'
-import { useState, useEffect } from 'react'
-import type { SessionMetrics } from '../../domain/SessionMetrics.js'
-import type { DayMetrics } from '../../domain/DayMetrics.js'
-import { formatTokens } from '../../utils/format.js'
-
-interface Props {
-  currentSession: SessionMetrics | null
-  todayMetrics: DayMetrics | null
-  recentDays: DayMetrics[]
-}
+import { useUsage } from '../hooks/useUsage.js'
 
 const BAR_WIDTH = 16
 
-function bar(ratio: number): string {
-  const filled = Math.min(BAR_WIDTH, Math.round(ratio * BAR_WIDTH))
+function bar(pct: number): string {
+  const filled = Math.min(BAR_WIDTH, Math.round((pct / 100) * BAR_WIDTH))
   return '█'.repeat(filled) + '░'.repeat(BAR_WIDTH - filled)
 }
 
-function barColor(ratio: number): string {
-  if (ratio < 0.4) return 'green'
-  if (ratio < 0.75) return 'yellow'
+function barColor(pct: number): string {
+  if (pct < 40) return 'green'
+  if (pct < 75) return 'yellow'
   return 'red'
 }
 
-function timeUntilMidnight(): string {
-  const now = new Date()
-  const midnight = new Date(now)
-  midnight.setHours(24, 0, 0, 0)
-  const ms = midnight.getTime() - now.getTime()
-  const totalMinutes = Math.floor(ms / 60_000)
-  const h = Math.floor(totalMinutes / 60)
-  const m = totalMinutes % 60
-  return `${h}h ${String(m).padStart(2, '0')}m`
+function timeUntil(date: Date): string {
+  const ms = date.getTime() - Date.now()
+  if (ms <= 0) return 'now'
+  const mins = Math.floor(ms / 60_000)
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  if (days > 0) return `${days}d ${hours % 24}h`
+  if (hours > 0) return `${hours}h ${String(mins % 60).padStart(2, '0')}m`
+  return `${mins}m`
 }
 
-export function SmallPanel({ currentSession, todayMetrics, recentDays }: Props) {
-  const [tick, setTick] = useState(0)
+function shortDate(date: Date): string {
+  return date.toLocaleDateString('en', { month: 'short', day: 'numeric' })
+}
 
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 30_000)
-    return () => clearInterval(id)
-  }, [])
-
-  void tick
-
-  const todayCost = todayMetrics?.costUSD ?? 0
-  const sessionCost = currentSession?.costUSD ?? 0
-  const sessionTokens = (currentSession?.inputTokens ?? 0) + (currentSession?.outputTokens ?? 0)
-  const weekCost = recentDays.reduce((sum, d) => sum + d.costUSD, 0)
-
-  const sessionRatio = todayCost > 0 ? sessionCost / todayCost : 0
-  const weekRatio = weekCost > 0 ? todayCost / weekCost : 0
-
-  function pct(ratio: number): string {
-    return `${Math.round(ratio * 100)}%`
-  }
-
-  const hasData = currentSession !== null || todayMetrics !== null
+export function SmallPanel() {
+  const usage = useUsage()
 
   return (
     <Box flexDirection="column" borderStyle="round" borderColor="gray" paddingX={1}>
@@ -65,29 +39,31 @@ export function SmallPanel({ currentSession, todayMetrics, recentDays }: Props) 
         <Text dimColor>widget</Text>
       </Box>
 
-      {!hasData ? (
-        <Box>
-          <Text dimColor>waiting for session…</Text>
+      {!usage ? (
+        <Box flexDirection="column">
+          <Text dimColor>fetching usage…</Text>
+          <Box marginTop={1}>
+            <Text dimColor>[q] quit</Text>
+          </Box>
         </Box>
       ) : (
         <>
           <Box>
             <Box width={10}><Text dimColor>session </Text></Box>
-            <Text color={barColor(sessionRatio)}>{bar(sessionRatio)} </Text>
-            <Box width={5}><Text color="white">{pct(sessionRatio)} </Text></Box>
-            <Text dimColor>{formatTokens(sessionTokens)}</Text>
+            <Text color={barColor(usage.session.utilization)}>{bar(usage.session.utilization)} </Text>
+            <Box width={5}><Text color="white">{Math.round(usage.session.utilization)}% </Text></Box>
+            <Text dimColor>↻ {timeUntil(usage.session.resetsAt)}</Text>
           </Box>
 
           <Box>
             <Box width={10}><Text dimColor>week    </Text></Box>
-            <Text color={barColor(weekRatio)}>{bar(weekRatio)} </Text>
-            <Box width={5}><Text color="magenta">{pct(weekRatio)} </Text></Box>
-            <Text dimColor>{todayMetrics?.sessionCount ?? 0}s today</Text>
+            <Text color={barColor(usage.week.utilization)}>{bar(usage.week.utilization)} </Text>
+            <Box width={5}><Text color="magenta">{Math.round(usage.week.utilization)}% </Text></Box>
+            <Text dimColor>↻ {shortDate(usage.week.resetsAt)}</Text>
           </Box>
 
           <Box marginTop={1}>
-            <Text dimColor>↻ resets in {timeUntilMidnight()}  </Text>
-            <Text dimColor color="gray">[q] quit</Text>
+            <Text dimColor>[q] quit</Text>
           </Box>
         </>
       )}

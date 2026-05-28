@@ -25,13 +25,7 @@ export function App({ projectFilter, small = false }: Props) {
   const hasData = currentSession !== null || todayMetrics !== null
 
   if (small) {
-    return (
-      <SmallPanel
-        currentSession={currentSession}
-        todayMetrics={todayMetrics}
-        recentDays={recentDays}
-      />
-    )
+    return <SmallPanel />
   }
 
   return (

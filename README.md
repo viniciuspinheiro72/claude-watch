@@ -9,13 +9,12 @@ Real-time terminal dashboard for Claude Code token usage and cost. Watches your 
 │ Messages     23                │ │ ────────────────────────────── │
 │ ────────────────────────────── │ │ Input tokens          284.3k    │
 │ Input tokens 142.1k            │ │ Output tokens         38.2k     │
-│ Output tokens 19.4k            │ │ Cache write           12.5k     │
-│ Cache write   6.2k             │ │ Cache read            198.7k    │
-│ Cache read   99.3k             │ │ Total tokens          533.7k    │
-│ Total tokens 267.0k            │ │                                 │
-│                                │ │ Today's cost          $0.3821   │
-│ Session cost  $0.1847          │ ╰─────────────────────────────────╯
-│ Updated 19:24:11               │
+│ Cache write   6.2k             │ │ Cache write           12.5k     │
+│ Cache read   99.3k             │ │ Cache read            198.7k    │
+│ Total tokens 267.0k            │ │ Total tokens          533.7k    │
+│                                │ │                                 │
+│ Session cost  $0.1847          │ │ Today's cost          $0.3821   │
+│ Updated 19:24:11               │ ╰─────────────────────────────────╯
 ╰────────────────────────────────╯
 
 ╭─ Last 7 Days ────────────────────────────────────────╮
@@ -56,31 +55,40 @@ claude-watch -P ~/projects/my-app
 # Compact widget mode (fits in a tmux pane or terminal corner)
 claude-watch --small
 claude-watch -s
+
+# Widget without border
+claude-watch --small --no-border
 ```
 
 Press `q` to quit.
 
 ### Widget mode
 
-`--small` renders a minimal 6-line panel designed to sit in a tmux pane or a narrow terminal alongside your work:
+`--small` renders a compact panel showing your real usage limits — the same numbers as Claude Code's `/usage` command. It reads your OAuth token from `~/.claude/.credentials.json` and polls `claude.ai` every 60 seconds.
 
 ```
-╭─ claude-watch ──────────────────────────────╮
-│ claude-watch widget                          │
-│ session  ██████████░░░░░░  $0.18  26k       │
-│ today    ████░░░░░░░░░░░░  $2.31   3s       │
-│                                              │
-│ ↻ resets in 9h 42m  [q] quit               │
-╰──────────────────────────────────────────────╯
+╭─ claude-watch ──────────────────────────────────────╮
+│ claude-watch widget                                  │
+│ session  ████████████░░░░  43%  ↻ 2h 15m           │
+│ week     █░░░░░░░░░░░░░░░   5%  ↻ Jun 4            │
+│                                                      │
+│ [q] quit                                            │
+╰──────────────────────────────────────────────────────╯
 ```
 
-The progress bars are color-coded green → yellow → red as spend increases. The session bar shows this session's share of today's total; the today bar shows today's cost relative to your 7-day peak. The reset countdown ticks to midnight local time.
+- **session** — five-hour usage window (same as `/usage` "Current session")
+- **week** — seven-day usage window (same as `/usage` "Current week")
+- Bars are color-coded: green → yellow → red as utilization rises
+- Bar width scales with terminal width — safe to resize
+- `--no-border` removes the box border for cleaner embedding in tmux status bars
 
 ## How it works
 
-Claude Code writes a JSONL file per session under `~/.claude/projects/`. Each assistant response appends a line with token counts (`input_tokens`, `output_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`) and the model name.
+Claude Code writes a JSONL file per session under `~/.claude/projects/`. Each assistant response appends a line with token counts and the model name.
 
-`claude-watch` uses `fs.watch` with byte-offset tracking to tail these files in real time — updates appear within 1 second of Claude Code writing a response. Cost is computed from a bundled pricing table since Claude Code doesn't write a cost field directly.
+`claude-watch` uses `fs.watch` with byte-offset tracking to tail these files in real time — updates appear within 1 second of Claude Code writing a response. Cost is computed from a bundled pricing table.
+
+The widget mode calls `GET https://claude.ai/api/oauth/usage` using the OAuth token Claude Code stores locally, so no separate API key is needed.
 
 ## Dashboard panels
 
@@ -89,21 +97,22 @@ Claude Code writes a JSONL file per session under `~/.claude/projects/`. Each as
 | **Current Session** | Every response | Tokens, cost, model, duration, message count |
 | **Today** | Every response | Daily aggregate across all sessions |
 | **Last 7 Days** | On start + new sessions | Cost bar chart, token totals, session count |
-| **Widget** (`--small`) | Every response | Compact bars, session + daily cost, reset countdown |
+| **Widget** (`--small`) | Every 60s | Real usage limits from claude.ai, reset times |
 
-## Environment variables
+## CLI flags
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `CLAUDE_WATCH_LOG_DIR` | `~/.claude/projects/` | Override log directory path |
-| `NO_COLOR` | — | Disable color output |
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--project <path>` | `-P` | Filter to a specific project directory |
+| `--small` | `-s` | Compact widget mode |
+| `--no-border` | — | Remove border (widget mode only) |
 
 ## Development
 
 ```bash
 pnpm install
 pnpm dev          # run without building
-pnpm test         # 40 tests
+pnpm test         # run test suite
 pnpm coverage     # coverage report
 pnpm build        # compile to dist/
 ```

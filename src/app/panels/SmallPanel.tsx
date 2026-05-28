@@ -1,4 +1,4 @@
-import { Box, Text, useInput, useApp } from 'ink'
+import { Box, Text } from 'ink'
 import { useState, useEffect } from 'react'
 import type { SessionMetrics } from '../../domain/SessionMetrics.js'
 import type { DayMetrics } from '../../domain/DayMetrics.js'
@@ -35,12 +35,7 @@ function timeUntilMidnight(): string {
 }
 
 export function SmallPanel({ currentSession, todayMetrics, recentDays }: Props) {
-  const { exit } = useApp()
   const [tick, setTick] = useState(0)
-
-  useInput((input, key) => {
-    if (input === 'q' || (key.ctrl && input === 'c')) exit()
-  })
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 30_000)

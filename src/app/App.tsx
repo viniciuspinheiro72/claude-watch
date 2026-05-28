@@ -12,21 +12,28 @@ interface Props {
 }
 
 export function App({ projectFilter, small = false }: Props) {
+  if (small) return <WidgetApp />
+  return <FullApp projectFilter={projectFilter} />
+}
+
+function WidgetApp() {
+  const { exit } = useApp()
+  useInput((input, key) => {
+    if (input === 'q' || (key.ctrl && input === 'c')) exit()
+  })
+  return <SmallPanel />
+}
+
+function FullApp({ projectFilter }: { projectFilter?: string }) {
   const { exit } = useApp()
   const entries = useLogWatcher({ projectFilter })
   const { currentSession, todayMetrics, recentDays } = useAggregator(entries)
 
   useInput((input, key) => {
-    if (input === 'q' || (key.ctrl && input === 'c')) {
-      exit()
-    }
+    if (input === 'q' || (key.ctrl && input === 'c')) exit()
   })
 
   const hasData = currentSession !== null || todayMetrics !== null
-
-  if (small) {
-    return <SmallPanel />
-  }
 
   return (
     <Box flexDirection="column" padding={1}>
